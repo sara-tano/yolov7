@@ -682,7 +682,7 @@ class ComputeLossOTA:
                 all_gj.append(gj)
                 all_gi.append(gi)
                 all_anch.append(anch[i][idx])
-                from_which_layer.append(torch.ones(size=(len(b),)) * i)
+                from_which_layer.append((torch.ones(size=(len(b),)) * i).to('cuda'))
                 
                 fg_pred = pi[b, a, gj, gi]                
                 p_obj.append(fg_pred[:, 4:5])
@@ -1285,7 +1285,7 @@ class ComputeLossAuxOTA:
         return loss * bs, torch.cat((lbox, lobj, lcls, loss)).detach()
 
     def build_targets(self, p, targets, imgs):
-        
+        device = targets.device
         indices, anch = self.find_3_positive(p, targets)
 
         matching_bs = [[] for pp in p]
@@ -1327,7 +1327,7 @@ class ComputeLossAuxOTA:
                 all_gj.append(gj)
                 all_gi.append(gi)
                 all_anch.append(anch[i][idx])
-                from_which_layer.append(torch.ones(size=(len(b),)) * i)
+                from_which_layer.append(torch.ones(size=(len(b),), device=device) * i)
                 
                 fg_pred = pi[b, a, gj, gi]                
                 p_obj.append(fg_pred[:, 4:5])
@@ -1384,7 +1384,7 @@ class ComputeLossAuxOTA:
                 + 3.0 * pair_wise_iou_loss
             )
 
-            matching_matrix = torch.zeros_like(cost)
+            matching_matrix = torch.zeros_like(cost, device=device)
 
             for gt_idx in range(num_gt):
                 _, pos_idx = torch.topk(
@@ -1428,17 +1428,17 @@ class ComputeLossAuxOTA:
                 matching_targets[i] = torch.cat(matching_targets[i], dim=0)
                 matching_anchs[i] = torch.cat(matching_anchs[i], dim=0)
             else:
-                matching_bs[i] = torch.tensor([], device='cuda:0', dtype=torch.int64)
-                matching_as[i] = torch.tensor([], device='cuda:0', dtype=torch.int64)
-                matching_gjs[i] = torch.tensor([], device='cuda:0', dtype=torch.int64)
-                matching_gis[i] = torch.tensor([], device='cuda:0', dtype=torch.int64)
-                matching_targets[i] = torch.tensor([], device='cuda:0', dtype=torch.int64)
-                matching_anchs[i] = torch.tensor([], device='cuda:0', dtype=torch.int64)
+                matching_bs[i] = torch.tensor([], device=device, dtype=torch.int64)
+                matching_as[i] = torch.tensor([], device=device, dtype=torch.int64)
+                matching_gjs[i] = torch.tensor([], device=device, dtype=torch.int64)
+                matching_gis[i] = torch.tensor([], device=device, dtype=torch.int64)
+                matching_targets[i] = torch.tensor([], device=device, dtype=torch.int64)
+                matching_anchs[i] = torch.tensor([], device=device, dtype=torch.int64)
 
         return matching_bs, matching_as, matching_gjs, matching_gis, matching_targets, matching_anchs
 
     def build_targets2(self, p, targets, imgs):
-        
+        device = targets.device
         indices, anch = self.find_5_positive(p, targets)
 
         matching_bs = [[] for pp in p]
@@ -1480,7 +1480,7 @@ class ComputeLossAuxOTA:
                 all_gj.append(gj)
                 all_gi.append(gi)
                 all_anch.append(anch[i][idx])
-                from_which_layer.append(torch.ones(size=(len(b),)) * i)
+                from_which_layer.append(torch.ones(size=(len(b),), device=device) * i)
                 
                 fg_pred = pi[b, a, gj, gi]                
                 p_obj.append(fg_pred[:, 4:5])
@@ -1537,7 +1537,7 @@ class ComputeLossAuxOTA:
                 + 3.0 * pair_wise_iou_loss
             )
 
-            matching_matrix = torch.zeros_like(cost)
+            matching_matrix = torch.zeros_like(cost, device=device)
 
             for gt_idx in range(num_gt):
                 _, pos_idx = torch.topk(
